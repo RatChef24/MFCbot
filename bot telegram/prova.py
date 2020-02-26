@@ -1,10 +1,10 @@
 import telebot
-import time
+from flask import Flask, request
 import os
 
 botToken='1070241227:AAGNN87DedcRq3vC7edg42fHbltf8fzNNMA'
-
 bot= telebot.TeleBot(token=botToken)
+server = Flask(__name__)
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -12,7 +12,7 @@ def send_welcome(message):
 
 
 
-@bot.message_handler(func=lambda message:message.text=='Ciao' and message.chat.username=='El_ricki')
+@bot.message_handler(func=lambda message:message.text=='Ciao' and message.from_user.username=='El_ricki')
 def echo_all(message):
 	bot.reply_to(message, 'Salve sommo Padrone, come la posso servire?')
 
@@ -34,9 +34,26 @@ def testPrivate(message):
 @bot.message_handler(content_types=['text'])
 def echo_all(message):
     bot.send_message(message.chat.id, 'dab')
-    photo=open('test.jpg','rb')
-    bot.send_photo(message.chat.id, photo)
+    #photo=open('test.jpg','rb')
+    #bot.send_photo(message.chat.id, photo)
 
 
 
-bot.polling()
+
+
+
+@server.route('/' + botToken, methods=['PORT'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://blooming-badlands-17750.herokuapp.com/' + botToken)
+    return "!", 200
+
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
